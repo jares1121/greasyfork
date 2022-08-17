@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         购物优惠券省钱助手【淘宝】，【天猫】，【京东】，历史价格，购物比价， 一键领取隐藏优惠券，长期更新，放心下载
 // @namespace    http://www.ergirl.com/
-// @version      1.0.10
+// @version      1.0.11
 // @description  一键领取【淘宝】，【天猫】，【京东】隐藏优惠券，购物比价，查看商品历史价格，助您购物省钱
 // @author       jares chiang
 // @grant        none
@@ -113,28 +113,7 @@
 			}
 		}
 	}
-	// 转链
-	function turnUrl(id) {
-		let params = {
-			appkey: config.zhetaoke.appkey,
-			sid: config.zhetaoke.sid,
-			pid: config.zhetaoke.pid,
-			signurl: 4,
-			num_iid: id,
-		};
-		let url =
-			"https://api.zhetaoke.com:10001/api/open_gaoyongzhuanlian.ashx";
-		return new Promise(function (resolve, reject) {
-			dtd(url, params, (res) => {
-				let data = JSON.parse(res);
-				if (data.tbk_privilege_get_response) {
-					resolve(data.tbk_privilege_get_response.result.data);
-				} else {
-					resolve({});
-				}
-			});
-		});
-	}
+
 	/**
 	 * @description: 列表头部推荐
 	 * @param {*} type tb tm
@@ -396,7 +375,7 @@
 	// 天猫推荐初始化
 	function tmListRecInit() {
 		let q = getQueryVariable("q");
-        let params = {
+		let params = {
 			appkey: config.zhetaoke.appkey,
 			page: "1",
 			page_size: "20",
@@ -731,6 +710,28 @@
 				$("#historyChart").html("暂无历史数据");
 			}
 		}
+	}
+	// 转链
+	function turnUrl(id) {
+		let params = {
+			appkey: config.zhetaoke.appkey,
+			sid: config.zhetaoke.sid,
+			pid: config.zhetaoke.pid,
+			signurl: 4,
+			num_iid: id,
+		};
+		let url =
+			"https://api.zhetaoke.com:10001/api/open_gaoyongzhuanlian.ashx";
+		return new Promise(function (resolve, reject) {
+			dtd(url, params, (res) => {
+				let data = JSON.parse(res);
+				if (data.tbk_privilege_get_response) {
+					resolve(data.tbk_privilege_get_response.result.data);
+				} else {
+					resolve({});
+				}
+			});
+		});
 	}
 	// 历史记录
 	let his = new History();
