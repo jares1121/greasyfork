@@ -113,49 +113,51 @@
 			}
 		}
 	}
+	// 转链
+	function turnUrl(id) {
+		let params = {
+			appkey: config.zhetaoke.appkey,
+			sid: config.zhetaoke.sid,
+			pid: config.zhetaoke.pid,
+			signurl: 4,
+			num_iid: id,
+		};
+		let url =
+			"https://api.zhetaoke.com:10001/api/open_gaoyongzhuanlian.ashx";
+		return new Promise(function (resolve, reject) {
+			dtd(url, params, (res) => {
+				let data = JSON.parse(res);
+				if (data.tbk_privilege_get_response) {
+					resolve(data.tbk_privilege_get_response.result.data);
+				} else {
+					resolve({});
+				}
+			});
+		});
+	}
 	/**
 	 * @description: 列表头部推荐
-	 * @param {*} appkey
-	 * @param {*} page
-	 * @param {*} page_size
-	 * @param {*} sort
-	 * @param {*} q
-	 * @param {*} youquan
-	 * @param {*} type
+	 * @param {*} type tb tm
+	 * @param {*} data 数据源
 	 * @return {*}
 	 */
 	class ListRec {
 		constructor(options) {
-			this.params = {
-				appkey: options.appkey,
-				page: options.page,
-				page_size: options.page_size,
-				sort: options.sort,
-				q: options.q,
-				youquan: options.youquan,
-				type: options.type,
-			};
+			this.type = options.type;
+			this.data = options.data;
 		}
 		// 初始化
 		init() {
-			this.getData();
-		}
-		// 获取数据
-		getData() {
-			let that = this;
-			let url = "https://api.zhetaoke.com:10003/api/api_quanwang.ashx";
-			dtd(url, this.params, (res) => {
-				if (that.params.type === "taobao") {
-					that.addTbEle(res);
-				} else if (that.params.type === "tmall") {
-					that.addTmEle(res);
-				}
-			});
+			if (this.type === "taobao") {
+				this.addTbEle(this.data);
+			} else if (this.type === "tmall") {
+				this.addTmEle(this.data);
+			}
 		}
 		// 淘宝添加元素
 		addTbEle(data) {
 			let that = this;
-			let list = JSON.parse(data).content;
+			let list = data;
 			let html = "";
 			let html1 =
 				'<div class="m-itemlist jar-list-rec">' +
@@ -167,16 +169,7 @@
 				'<div class="swiper-button-next" style="width:45px;height:100px;color: #f40;margin-top:-50px;margin-right: 20px;background:rgba(0,0,0,0.4);"></div>' +
 				"</div></div></div>";
 			list.forEach((item) => {
-				let params = {
-					appkey: config.zhetaoke.appkey,
-					sid: config.zhetaoke.sid,
-					pid: config.zhetaoke.pid,
-					num_iid: item.tao_id,
-					signurl: 4,
-				};
-				let url =
-					"https://api.zhetaoke.com:10001/api/open_gaoyongzhuanlian.ashx";
-				dtd(url, params, (res) => {
+				turnUrl(item.tao_id).then((res) => {
 					that.listRecChangeUrl(res);
 				});
 				let html2 =
@@ -228,9 +221,9 @@
 				},
 			});
 		}
-		// 淘宝转链
+		// 淘宝推荐插入优惠券
 		listRecChangeUrl(data) {
-			let obj = JSON.parse(data).tbk_privilege_get_response.result.data;
+			let obj = data;
 			let node = $('.jar-list-rec .items[data-id="' + obj.item_id + '"]');
 			if (obj.coupon_info) {
 				let html =
@@ -245,7 +238,7 @@
 		// 天猫添加元素
 		addTmEle(data) {
 			let that = this;
-			let list = JSON.parse(data).content;
+			let list = data;
 			let html = "";
 			let html1 =
 				'<div class="m-itemlist jar-list-rec">' +
@@ -257,16 +250,9 @@
 				'<div class="swiper-button-next" style="width:45px;height:100px;color: #f40;margin-top:-50px;margin-right: 20px;background:rgba(0,0,0,0.4);"></div>' +
 				"</div></div></div>";
 			list.forEach((item) => {
-				let params = {
-					appkey: config.zhetaoke.appkey,
-					sid: config.zhetaoke.sid,
-					pid: config.zhetaoke.pid,
-					num_iid: item.tao_id,
-					signurl: 4,
-				};
-				let url =
-					"https://api.zhetaoke.com:10001/api/open_gaoyongzhuanlian.ashx";
-				dtd(url, params, that.tmListRecChangeUrl);
+				turnUrl(item.tao_id).then((res) => {
+					that.tmListRecChangeUrl(res);
+				});
 				let html2 =
 					'<div class="swiper-slide">' +
 					'<div class="product" data-id="' +
@@ -311,9 +297,9 @@
 				},
 			});
 		}
-		// 天猫推荐转链
+		// 天猫推荐插入优惠券
 		tmListRecChangeUrl(data) {
-			let obj = JSON.parse(data).tbk_privilege_get_response.result.data;
+			let obj = data;
 			let node = $(
 				'.jar-list-rec .product[data-id="' + obj.item_id + '"]'
 			);
@@ -389,47 +375,59 @@
 	function listRecInit() {
 		let q = getQueryVariable("q");
 		if (q) {
-			let listRec = new ListRec({
+			let url = "https://api.zhetaoke.com:10003/api/api_quanwang.ashx";
+			let params = {
 				appkey: config.zhetaoke.appkey,
-				page: "1",
-				page_size: "20",
-				sort: "sale_num_desc",
-				q: decodeURIComponent(q),
-				youquan: "1",
-				type: "taobao",
+				page: config.zhetaoke.page,
+				page_size: config.zhetaoke.page_size,
+				sort: config.zhetaoke.sort,
+				q: config.zhetaoke.q,
+				youquan: config.zhetaoke.youquan,
+			};
+			dtd(url, params, (res) => {
+				let listRec = new ListRec({
+					type: "taobao",
+					data: JSON.parse(res).content,
+				});
+				listRec.init();
 			});
-			listRec.init();
 		}
 	}
 	// 天猫推荐初始化
 	function tmListRecInit() {
 		let q = getQueryVariable("q");
+        let params = {
+			appkey: config.zhetaoke.appkey,
+			page: "1",
+			page_size: "20",
+			sort: "sale_num_desc",
+			q: decodeURI(q),
+			youquan: "1",
+		};
 		if (q) {
 			try {
-				let listRec = new ListRec({
-					appkey: config.zhetaoke.appkey,
-					page: "1",
-					page_size: "20",
-					sort: "sale_num_desc",
-					q: decodeURI(q),
-					youquan: "1",
-					type: "tmall",
+				let url =
+					"https://api.zhetaoke.com:10003/api/api_quanwang.ashx";
+				dtd(url, params, (res) => {
+					let listRec = new ListRec({
+						type: "tmall",
+						data: JSON.parse(res).content,
+					});
+					listRec.init();
 				});
-				listRec.init();
 				//utf-8
 			} catch (err) {
 				//gbk or 其他编码
 				urldecode(q, "gbk", function (str) {
-					let listRec = new ListRec({
-						appkey: config.zhetaoke.appkey,
-						page: "1",
-						page_size: "20",
-						sort: "sale_num_desc",
-						q: str,
-						youquan: "1",
-						type: "tmall",
+					let url =
+						"https://api.zhetaoke.com:10003/api/api_quanwang.ashx";
+					dtd(url, params, (res) => {
+						let listRec = new ListRec({
+							type: "tmall",
+							data: JSON.parse(res).content,
+						});
+						listRec.init();
 					});
-					listRec.init();
 				});
 			}
 		}
