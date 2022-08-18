@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         购物优惠券省钱助手【淘宝】，【天猫】，【京东】，历史价格，购物比价， 一键领取隐藏优惠券，长期更新，放心下载
 // @namespace    http://www.ergirl.com/
-// @version      1.0.11
+// @version      1.0.12
 // @description  一键领取【淘宝】，【天猫】，【京东】隐藏优惠券，购物比价，查看商品历史价格，助您购物省钱
 // @author       jares chiang
 // @grant        none
@@ -484,7 +484,11 @@
 				$("#J_juValid").before(html);
 			} else if (host.indexOf("tmall") > -1) {
 				// 插入天猫
-				$(".tb-action").before(html);
+				if ($(".tb-action").length > 0) {
+					$(".tb-action").before(html);
+				} else if ($(".BasicContent--sku--6N_nw6c").length > 0) {
+					$(".BasicContent--sku--6N_nw6c").before(html);
+				}
 			}
 			$(".jar-detail-coupon .jar-tab li").click(function () {
 				let index = $(this).index();
@@ -595,9 +599,11 @@
 			num_iid: getQueryVariable("id"),
 			signurl: "4",
 		};
-		let detail = new Detail(detailParams);
-		detail.addBasic();
-		detail.getCoupon();
+		setTimeout(() => {
+			let detail = new Detail(detailParams);
+			detail.addBasic();
+			detail.getCoupon();
+		}, 1000);
 	}
 	/**
 	 * @description: 相似比价
