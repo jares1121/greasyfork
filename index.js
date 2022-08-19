@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         购物优惠券省钱助手【淘宝】，【天猫】，【京东】，历史价格，购物比价， 一键领取隐藏优惠券，长期更新，放心下载
 // @namespace    http://www.ergirl.com/
-// @version      1.0.12
+// @version      1.0.13
 // @description  一键领取【淘宝】，【天猫】，【京东】隐藏优惠券，购物比价，查看商品历史价格，助您购物省钱
 // @author       jares chiang
 // @grant        none
@@ -127,14 +127,10 @@
 		}
 		// 初始化
 		init() {
-			if (this.type === "taobao") {
-				this.addTbEle(this.data);
-			} else if (this.type === "tmall") {
-				this.addTmEle(this.data);
-			}
+			this.addEle(this.data);
 		}
 		// 淘宝添加元素
-		addTbEle(data) {
+		addEle(data) {
 			let that = this;
 			let list = data;
 			let html = "";
@@ -149,59 +145,92 @@
 				"</div></div></div>";
 			list.forEach((item) => {
 				turnUrl(item.tao_id).then((res) => {
-					that.listRecChangeUrl(res);
+					that.recChangeUrl(res);
 				});
-				let html2 =
-					'<div class="swiper-slide">' +
-					'<div class="items" data-id="' +
-					item.tao_id +
-					'">' +
-					'<div class="item J_MouserOnverReq" style="height: 365px;">' +
-					'<div class="pic-box J_MouseEneterLeave J_PicBox">' +
-					'<div class="pic-box-inner">' +
-					'<div class="pic">' +
-					'<a class="pic-link J_ClickStat J_ItemPicA" data-nid="' +
-					item.tao_id +
-					'" href="' +
-					item.item_url +
-					'" target="_blank">' +
-					'<img class="J_ItemPic img" src="' +
-					item.pict_url +
-					'" alt="' +
-					item.tao_title +
-					'">' +
-					"</a></div></div></div>" +
-					'<div class="ctx-box J_MouseEneterLeave J_IconMoreNew">' +
-					'<div class="row row-1 g-clearfix">' +
-					'<div class="price g_price g_price-highlight">' +
-					"<span>¥</span><strong>" +
-					item.quanhou_jiage +
-					"</strong>" +
-					"</div>" +
-					'<div class="deal-cnt">' +
-					item.volume +
-					"人付款</div>" +
-					"</div>" +
-					'<div class="row row-2 title">' +
-					'<a class="J_ClickStat" href="' +
-					item.item_url +
-					'" target="_blank">' +
-					item.tao_title +
-					"</a></div></div></div></div></div>";
-				html += html2;
+				if (that.type === "taobao") {
+					let html2 =
+						'<div class="swiper-slide">' +
+						'<div class="items" data-id="' +
+						item.tao_id +
+						'">' +
+						'<div class="item J_MouserOnverReq" style="height: 365px;">' +
+						'<div class="pic-box J_MouseEneterLeave J_PicBox">' +
+						'<div class="pic-box-inner">' +
+						'<div class="pic">' +
+						'<a class="pic-link J_ClickStat J_ItemPicA" data-nid="' +
+						item.tao_id +
+						'" href="' +
+						item.item_url +
+						'" target="_blank">' +
+						'<img class="J_ItemPic img" src="' +
+						item.pict_url +
+						'" alt="' +
+						item.tao_title +
+						'">' +
+						"</a></div></div></div>" +
+						'<div class="ctx-box J_MouseEneterLeave J_IconMoreNew">' +
+						'<div class="row row-1 g-clearfix">' +
+						'<div class="price g_price g_price-highlight">' +
+						"<span>¥</span><strong>" +
+						item.quanhou_jiage +
+						"</strong>" +
+						"</div>" +
+						'<div class="deal-cnt">' +
+						item.volume +
+						"人付款</div>" +
+						"</div>" +
+						'<div class="row row-2 title">' +
+						'<a class="J_ClickStat" href="' +
+						item.item_url +
+						'" target="_blank">' +
+						item.tao_title +
+						"</a></div></div></div></div></div>";
+					html += html2;
+				} else if (that.type === "tmall") {
+					let html2 =
+						'<div class="swiper-slide">' +
+						'<div class="items product" data-id="' +
+						item.tao_id +
+						'" style="width:100%;height:315px;">' +
+						'<div class="product-iWrap">' +
+						'<div class="productImg-wrap">' +
+						'<a href="' +
+						item.item_url +
+						'" class="productImg" target="_blank">' +
+						'<img src="' +
+						item.pict_url +
+						'">' +
+						"</a>" +
+						"</div>" +
+						'<p class="productPrice">' +
+						'<em title="' +
+						item.quanhou_jiage +
+						'"><b>¥</b>' +
+						item.quanhou_jiage +
+						"</em>" +
+						"</p>" +
+						'<p class="productTitle">' +
+						'<a href="' +
+						item.item_url +
+						'">' +
+						item.tao_title +
+						"</a>" +
+						"</p>" +
+						"</div>" +
+						"</div>" +
+						"</div>";
+					html += html2;
+				}
 			});
-			$("#mainsrp-related").append(html1 + html + html3);
-			var mySwiper = new Swiper(".swiper-container", {
-				slidesPerView: 4,
-				slidesPerGroup: 4,
-				navigation: {
-					nextEl: ".swiper-button-next",
-					prevEl: ".swiper-button-prev",
-				},
-			});
+			if (this.type === "taobao") {
+				$("#mainsrp-related").append(html1 + html + html3);
+			} else if (this.type === "tmall") {
+				$("#J_NavAttrsForm").append(html1 + html + html3);
+			}
+			this.swiperInit();
 		}
-		// 淘宝推荐插入优惠券
-		listRecChangeUrl(data) {
+		// 淘宝推荐天猫推荐插入优惠券
+		recChangeUrl(data) {
 			let obj = data;
 			let node = $('.jar-list-rec .items[data-id="' + obj.item_id + '"]');
 			if (obj.coupon_info) {
@@ -214,83 +243,22 @@
 				node.append(html);
 			}
 		}
-		// 天猫添加元素
-		addTmEle(data) {
-			let that = this;
-			let list = data;
-			let html = "";
-			let html1 =
-				'<div class="m-itemlist jar-list-rec">' +
-				'<div class="grid g-clearfix">' +
-				'<div class="swiper-container">' +
-				'<div class="swiper-wrapper">';
-			let html3 =
-				'</div><div class="swiper-button-prev" style="width:45px;height:100px;color: #f40;margin-top:-50px;background:rgba(0,0,0,0.4)"></div>' +
-				'<div class="swiper-button-next" style="width:45px;height:100px;color: #f40;margin-top:-50px;margin-right: 20px;background:rgba(0,0,0,0.4);"></div>' +
-				"</div></div></div>";
-			list.forEach((item) => {
-				turnUrl(item.tao_id).then((res) => {
-					that.tmListRecChangeUrl(res);
-				});
-				let html2 =
-					'<div class="swiper-slide">' +
-					'<div class="product" data-id="' +
-					item.tao_id +
-					'" style="width:100%;height:315px;">' +
-					'<div class="product-iWrap">' +
-					'<div class="productImg-wrap">' +
-					'<a href="' +
-					item.item_url +
-					'" class="productImg" target="_blank">' +
-					'<img src="' +
-					item.pict_url +
-					'">' +
-					"</a>" +
-					"</div>" +
-					'<p class="productPrice">' +
-					'<em title="' +
-					item.quanhou_jiage +
-					'"><b>¥</b>' +
-					item.quanhou_jiage +
-					"</em>" +
-					"</p>" +
-					'<p class="productTitle">' +
-					'<a href="' +
-					item.item_url +
-					'">' +
-					item.tao_title +
-					"</a>" +
-					"</p>" +
-					"</div>" +
-					"</div>" +
-					"</div>";
-				html += html2;
-			});
-			$("#J_NavAttrsForm").append(html1 + html + html3);
+		// 轮播图初始化
+		swiperInit() {
+			let num = 0;
+			if (this.type === "taobao") {
+				num = 4;
+			} else if (this.type === "tmall") {
+				num = 5;
+			}
 			var mySwiper = new Swiper(".swiper-container", {
-				slidesPerView: 5,
-				slidesPerGroup: 5,
+				slidesPerView: num,
+				slidesPerGroup: num,
 				navigation: {
 					nextEl: ".swiper-button-next",
 					prevEl: ".swiper-button-prev",
 				},
 			});
-		}
-		// 天猫推荐插入优惠券
-		tmListRecChangeUrl(data) {
-			let obj = data;
-			let node = $(
-				'.jar-list-rec .product[data-id="' + obj.item_id + '"]'
-			);
-			if (obj.coupon_info) {
-				let html =
-					"<div class='jar-list-coupon' style='right:22px;bottom:0;'><p><a target='_blank' href=https://www.ergirl.com/jump.html?url=" +
-					obj.shorturl +
-					">" +
-					obj.coupon_info +
-					"</a></p></div>";
-				node.append(html);
-			}
 		}
 	}
 	// 列表初始化
@@ -357,11 +325,11 @@
 			let url = "https://api.zhetaoke.com:10003/api/api_quanwang.ashx";
 			let params = {
 				appkey: config.zhetaoke.appkey,
-				page: config.zhetaoke.page,
-				page_size: config.zhetaoke.page_size,
-				sort: config.zhetaoke.sort,
-				q: config.zhetaoke.q,
-				youquan: config.zhetaoke.youquan,
+				page: "1",
+				page_size: "20",
+				sort: "sale_num_desc",
+				q: q,
+				youquan: "1",
 			};
 			dtd(url, params, (res) => {
 				let listRec = new ListRec({
@@ -373,43 +341,37 @@
 		}
 	}
 	// 天猫推荐初始化
-	function tmListRecInit() {
+	async function tmListRecInit() {
 		let q = getQueryVariable("q");
+		let qq = "";
+		try {
+			//utf-8
+			qq = decodeURI(q);
+		} catch (err) {
+			//gbk or 其他编码
+			let pro = new Promise(function (resolve, reject) {
+				urldecode(q, "gbk", function (str) {
+					resolve(str);
+				});
+			});
+			qq = await pro;
+		}
 		let params = {
 			appkey: config.zhetaoke.appkey,
 			page: "1",
 			page_size: "20",
 			sort: "sale_num_desc",
-			q: decodeURI(q),
+			q: qq,
 			youquan: "1",
 		};
-		if (q) {
-			try {
-				let url =
-					"https://api.zhetaoke.com:10003/api/api_quanwang.ashx";
-				dtd(url, params, (res) => {
-					let listRec = new ListRec({
-						type: "tmall",
-						data: JSON.parse(res).content,
-					});
-					listRec.init();
-				});
-				//utf-8
-			} catch (err) {
-				//gbk or 其他编码
-				urldecode(q, "gbk", function (str) {
-					let url =
-						"https://api.zhetaoke.com:10003/api/api_quanwang.ashx";
-					dtd(url, params, (res) => {
-						let listRec = new ListRec({
-							type: "tmall",
-							data: JSON.parse(res).content,
-						});
-						listRec.init();
-					});
-				});
-			}
-		}
+		let url = "https://api.zhetaoke.com:10003/api/api_quanwang.ashx";
+		dtd(url, params, (res) => {
+			let listRec = new ListRec({
+				type: "tmall",
+				data: JSON.parse(res).content,
+			});
+			listRec.init();
+		});
 	}
 	/**
 	 * @description: 详情
