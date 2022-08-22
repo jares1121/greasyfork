@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         购物优惠券省钱助手【淘宝】，【天猫】，【京东】，历史价格，购物比价， 一键领取隐藏优惠券，长期更新，放心下载
 // @namespace    http://www.ergirl.com/
-// @version      1.0.13
+// @version      1.0.14
 // @description  一键领取【淘宝】，【天猫】，【京东】隐藏优惠券，购物比价，查看商品历史价格，助您购物省钱
 // @author       jares chiang
 // @grant        none
@@ -63,7 +63,9 @@
 		}
 		// 初始化
 		init() {
-			this.getData();
+			setTimeout(() => {
+				this.getData();
+			}, 1000);
 		}
 		// 获取数据
 		getData() {
@@ -264,7 +266,10 @@
 	// 列表初始化
 	initTlist();
 
-	// 淘宝天猫列表初始化入口
+	/**
+	 * @description: 淘宝天猫列表初始化入口
+	 * @return {*}
+	 */
 	function initTlist() {
 		if (host.indexOf("taobao") > -1) {
 			if (host.indexOf("item.taobao") === -1) {
@@ -292,7 +297,7 @@
 				tList.init();
 			}
 			// 淘宝列表推荐
-			listRecInit();
+			listRecInit("taobao");
 		} else if (host.indexOf("tmall") > -1) {
 			let tmList = new TList({
 				appkey: config.zhetaoke.appkey,
@@ -304,70 +309,51 @@
 			});
 			tmList.init();
 			// 天猫列表推荐
-			tmListRecInit();
+			listRecInit("tmall");
 		}
 	}
-	function domAddEventListener(targetNode, callback) {
-		if (targetNode) {
-			var observer = new MutationObserver(function (mutations) {
-				callback();
-			});
-			observer.observe(targetNode, {
-				attributes: true,
-				childList: true,
-			});
-		}
-	}
-	// 淘宝列表推荐初始化
-	function listRecInit() {
+	/**
+	 * @description: 淘宝天猫列表推荐初始化
+	 * @param {*} type 类别
+	 * @return {*}
+	 */
+	async function listRecInit(type) {
 		let q = getQueryVariable("q");
-		if (q) {
-			let url = "https://api.zhetaoke.com:10003/api/api_quanwang.ashx";
-			let params = {
-				appkey: config.zhetaoke.appkey,
-				page: "1",
-				page_size: "20",
-				sort: "sale_num_desc",
-				q: q,
-				youquan: "1",
-			};
-			dtd(url, params, (res) => {
-				let listRec = new ListRec({
-					type: "taobao",
-					data: JSON.parse(res).content,
-				});
-				listRec.init();
-			});
+		if (!q) {
+			return false;
 		}
-	}
-	// 天猫推荐初始化
-	async function tmListRecInit() {
-		let q = getQueryVariable("q");
-		let qq = "";
-		try {
-			//utf-8
-			qq = decodeURI(q);
-		} catch (err) {
-			//gbk or 其他编码
-			let pro = new Promise(function (resolve, reject) {
-				urldecode(q, "gbk", function (str) {
-					resolve(str);
-				});
-			});
-			qq = await pro;
-		}
+		let url = "https://api.zhetaoke.com:10003/api/api_quanwang.ashx";
 		let params = {
 			appkey: config.zhetaoke.appkey,
 			page: "1",
 			page_size: "20",
 			sort: "sale_num_desc",
-			q: qq,
+			q: q,
 			youquan: "1",
 		};
-		let url = "https://api.zhetaoke.com:10003/api/api_quanwang.ashx";
+		if (type === "tmall") {
+			let qq = "";
+			try {
+				//utf-8
+				qq = decodeURI(q);
+			} catch (err) {
+				//gbk or 其他编码
+				let pro = new Promise(function (resolve, reject) {
+					urldecode(q, "gbk", function (str) {
+						if (str) {
+							resolve(str);
+						} else {
+							reject("");
+						}
+					});
+				});
+				qq = await pro;
+			}
+			params.q = qq;
+		}
 		dtd(url, params, (res) => {
 			let listRec = new ListRec({
-				type: "tmall",
+				type: type,
 				data: JSON.parse(res).content,
 			});
 			listRec.init();
@@ -679,7 +665,11 @@
 			}
 		}
 	}
-	// 转链
+	/**
+	 * @description: 转链
+	 * @param {*} id
+	 * @return {*}
+	 */
 	function turnUrl(id) {
 		let params = {
 			appkey: config.zhetaoke.appkey,
@@ -700,6 +690,23 @@
 				}
 			});
 		});
+	}
+	/**
+	 * @description: DOM监听
+	 * @param {*} targetNode DOM节点
+	 * @param {*} callback 回调函数
+	 * @return {*}
+	 */
+	function domAddEventListener(targetNode, callback) {
+		if (targetNode) {
+			var observer = new MutationObserver(function (mutations) {
+				callback();
+			});
+			observer.observe(targetNode, {
+				attributes: true,
+				childList: true,
+			});
+		}
 	}
 	// 历史记录
 	let his = new History();
